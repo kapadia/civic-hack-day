@@ -1,0 +1,13 @@
+{
+  "name": "Mentorship",
+  "version": "0.0.1",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kapadia/civic-hack-day.git"
+  },
+  "dependencies": {
+    "coffee-script": "*",
+    "stylus": "*",
+    "http-server": "*"
+  }
+}
