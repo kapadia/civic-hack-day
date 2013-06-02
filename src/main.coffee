@@ -1,6 +1,6 @@
 
 spec = {
-  "width": 800,
+  "width": 600,
   "height": 300,
   "padding": {"top": 10, "left": 30, "bottom": 240, "right": 10},
   "data": [
@@ -19,7 +19,6 @@ spec = {
       "name": "y",
       "range": "height",
       "nice": true,
-      # "domain": d3.extent(values, (d) -> return parseFloat(d.y))
     }
   ],
   "axes": [
@@ -80,6 +79,9 @@ parseData = (dataset) ->
   minimumEl = $("input[data-type='min']")
   maximumEl = $("input[data-type='max']")
   
+  # Enable drop down
+  selectEl.removeAttr('disabled')
+  
   $("select.dimension").on('change', (e) ->
     
     # Clear any existing dimensions
@@ -122,7 +124,13 @@ parseData = (dataset) ->
         spec.data[0].values = values
 
         vg.parse.spec(spec, (chart) ->
-          view = chart({el: '#vis'}).update()
+          view = chart({el: '#vis'})
+          view.renderer("svg")
+          view.update()
+          view.on('mouseover', (e, item) ->
+            $("p[data-field='school']").text(item.datum.data.x)
+            $("p[data-field='value']").text(item.datum.data.y)
+          )
         )
         
       )
@@ -141,7 +149,13 @@ parseData = (dataset) ->
         spec.data[0].values = values
 
         vg.parse.spec(spec, (chart) ->
-          view = chart({el: '#vis'}).update()
+          view = chart({el: '#vis'})
+          view.renderer("svg")
+          view.update()
+          view.on('mouseover', (e, item) ->
+            $("p[data-field='school']").text(item.datum.data.x)
+            $("p[data-field='value']").text(item.datum.data.y)
+          )
         )
         
       )
@@ -155,17 +169,32 @@ parseData = (dataset) ->
     
     spec.scales[1].domain = extent
     spec.data[0].values = values
-    
+    console.log 'here'
     vg.parse.spec(spec, (chart) ->
-      view = chart({el: '#vis'}).update()
+      view = chart({el: '#vis'})
+      view.renderer("svg")
+      view.update()
+      view.on('mouseover', (e, item) ->
+        $("p[data-field='school']").text(item.datum.data.x)
+        $("p[data-field='value']").text(item.datum.data.y)
+      )
     )
     
   )
 
 domReady = ->
-  console.log 'domReady'
+  
+  # Get data for Chicago Public School
   $.ajax('http://data.cityofchicago.org/resource/9xs2-f89t.json')
     .done(parseData)
+  
+  # Set up interface
+  $("a[data-goto='2']").on('click', (e) ->
+    e.preventDefault()
+    e.stopPropagation()
+    $('.container').addClass('hide')
+    $('.container:nth-child(2)').removeClass('hide')
+  )
 
 
 window.addEventListener('DOMContentLoaded', domReady, false)
