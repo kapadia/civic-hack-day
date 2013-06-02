@@ -88,6 +88,9 @@ createHistogram = (school, dimensions, field) ->
   maxEl.attr("min", extent[0])
   maxEl.attr("max", extent[1])
   
+  # Add title
+  el.find('.title').text(field.replace(/_/g, ' '))
+  
   # TODO: Define slider events
   
   # Apply filter based on extent (extent is needed to avoid NDAs)
@@ -107,8 +110,8 @@ createHistogram = (school, dimensions, field) ->
     view.renderer("svg")
     view.update()
     view.on('mouseover', (e, item) ->
-      $("p[data-field='school']").text(item.datum.data.x)
-      $("p[data-field='value']").text(item.datum.data.y)
+      $("div[data-dimension='#{field}'] p[data-field='school']").text(item.datum.data.x)
+      $("div[data-dimension='#{field}'] p[data-field='value']").text(item.datum.data.y)
     )
   )
 
@@ -127,7 +130,7 @@ parseData = (dataset) ->
   createHistogram(school, dimensions, 'rate_of_misconducts_per_100_students_')
   createHistogram(school, dimensions, 'graduation_rate_')
   createHistogram(school, dimensions, 'average_student_attendance')
-  createHistogram(school, dimensions, 'teachers_score')
+  createHistogram(school, dimensions, 'safety_score')
   
   return
   
