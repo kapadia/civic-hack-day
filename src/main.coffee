@@ -62,6 +62,56 @@ spec = {
   ]
 }
 
+createHistogram = (school, dimensions, field) ->
+  
+  # Clear existing dimensions
+  dimension = dimensions.shift()
+  dimension.remove() if dimension
+  
+  # Create new dimension for given field
+  dimension = school.dimension( (d) -> return d[field] )
+  dimensions.push dimension
+  
+  # Get all entries and compute extent
+  arr = dimension.top(Infinity)
+  extent = d3.extent(arr, (d) -> return parseFloat(d[field]) )
+  
+  # Get DOM elements
+  el = $("div[data-dimension='#{field}']")
+  
+  minEl = el.find("input[data-type='min']")
+  maxEl = el.find("input[data-type='max']")
+  
+  minEl.attr("min", extent[0])
+  minEl.attr("max", extent[1])
+  
+  maxEl.attr("min", extent[0])
+  maxEl.attr("max", extent[1])
+  
+  # TODO: Define slider events
+  
+  # Apply filter based on extent (extent is needed to avoid NDAs)
+  dimension.filter(extent)
+  
+  # Get the filtered rows and map to x-y coordinates
+  arr = dimension.top(Infinity)
+  values = arr.map( (d) -> return {"x": d.name_of_school, "y": d[field]})
+  
+  fieldSpec = spec
+  
+  fieldSpec.scales[1].domain = extent
+  fieldSpec.data[0].values = values
+  
+  vg.parse.spec(fieldSpec, (chart) ->
+    view = chart({el: "div[data-dimension='#{field}'] .viz"})
+    view.renderer("svg")
+    view.update()
+    view.on('mouseover', (e, item) ->
+      $("p[data-field='school']").text(item.datum.data.x)
+      $("p[data-field='value']").text(item.datum.data.y)
+    )
+  )
+
 
 parseData = (dataset) ->
   
@@ -73,6 +123,13 @@ parseData = (dataset) ->
   
   # Get list of dimensions (e.g. columns)
   columns = Object.keys(dataset[0])
+  
+  createHistogram(school, dimensions, 'rate_of_misconducts_per_100_students_')
+  createHistogram(school, dimensions, 'graduation_rate_')
+  createHistogram(school, dimensions, 'average_student_attendance')
+  createHistogram(school, dimensions, 'teachers_score')
+  
+  return
   
   # Get DOM elements
   selectEl = $("select.dimension")
@@ -169,7 +226,7 @@ parseData = (dataset) ->
     
     spec.scales[1].domain = extent
     spec.data[0].values = values
-    console.log 'here'
+    
     vg.parse.spec(spec, (chart) ->
       view = chart({el: '#vis'})
       view.renderer("svg")
@@ -185,7 +242,7 @@ parseData = (dataset) ->
 domReady = ->
   
   # Get data for Chicago Public School
-  $.ajax('http://data.cityofchicago.org/resource/9xs2-f89t.json')
+  $.ajax('http://data.cityofchicago.org/resource/9xs2-f89t.json?elementary_or_high_school=HS')
     .done(parseData)
   
   # Set up interface
@@ -198,3 +255,5 @@ domReady = ->
 
 
 window.addEventListener('DOMContentLoaded', domReady, false)
+
+# http://data.cityofchicago.org/resource/9xs2-f89t.json?elementary_or_high_school=HS&$select=ward
