@@ -75,9 +75,10 @@ parseData = (dataset) ->
   # Get list of dimensions (e.g. columns)
   columns = Object.keys(dataset[0])
   
-  # Populate select element
-  for column in columns
-    $("select.dimension").append("<option>#{column}</option>")
+  # Get DOM elements
+  selectEl = $("select.dimension")
+  minimumEl = $("input[data-type='min']")
+  maximumEl = $("input[data-type='max']")
   
   $("select.dimension").on('change', (e) ->
     
@@ -93,6 +94,57 @@ parseData = (dataset) ->
     # Get all entries and compute extent
     arr = dimension.top(Infinity)
     extent = d3.extent(arr, (d) -> return parseFloat(d[name]) )
+    
+    # Update min and max attribute for range inputs
+    minimumEl.attr("min", extent[0])
+    minimumEl.attr("max", extent[1])
+    
+    maximumEl.attr("min", extent[0])
+    maximumEl.attr("max", extent[1])
+    
+    do (extent, dimension, name) ->
+      
+      # Clear previous handlers
+      minimumEl.off()
+      maximumEl.off()
+      
+      minimumEl.on('change', (e) ->
+        min = e.target.value
+        max = maximumEl.val()
+        
+        dimension.remove()
+        dimension.filter([min, max])
+        
+        arr = dimension.top(Infinity)
+        values = arr.map( (d) -> return {"x": d.name_of_school, "y": d[name]})
+        
+        spec.scales[1].domain = [min, max]
+        spec.data[0].values = values
+
+        vg.parse.spec(spec, (chart) ->
+          view = chart({el: '#vis'}).update()
+        )
+        
+      )
+      
+      maximumEl.on('change', (e) ->
+        min = minimumEl.val()
+        max = e.target.value
+        
+        dimension.remove()
+        dimension.filter([min, max])
+        
+        arr = dimension.top(Infinity)
+        values = arr.map( (d) -> return {"x": d.name_of_school, "y": d[name]})
+        
+        spec.scales[1].domain = [min, max]
+        spec.data[0].values = values
+
+        vg.parse.spec(spec, (chart) ->
+          view = chart({el: '#vis'}).update()
+        )
+        
+      )
     
     # Apply filter based on extent (extent is needed to avoid NDAs)
     dimension.filter(extent)
